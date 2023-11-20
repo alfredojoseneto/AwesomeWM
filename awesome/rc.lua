@@ -35,25 +35,47 @@ end)
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
+local user_home = os.getenv("HOME")
+local xdg_config_home = user_home .. "/.config/awesome/"
+local user_theme = "default"
+-- beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
+beautiful.init(xdg_config_home .. "themes/" .. user_theme .. "/theme.lua")
+
+local wallpaper = "feh --bg-fill ~/.config/awesome/themes/wallpapers/debian.png"
 
 -- This is used later as the default terminal and editor to run.
 -- terminal = "terminator"
-terminal = "kitty"
-editor = os.getenv("EDITOR") or "nvim"
-editor_cmd = terminal .. " -e " .. editor
+-- local terminal = os.getenv("TERM") or "kitty"
+-- local terminal = os.getenv("TERM") or "alacritty"
+local terminal = "kitty"
+local editor = os.getenv("EDITOR") or "nvim"
+local editor_cmd = terminal .. " -e " .. editor
+local rofi = user_home .. "/.config/rofi/launchers/type-2/launcher.sh"
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
 -- If you do not like this or do not have such a key,
 -- I suggest you to remap Mod4 to another key using xmodmap or other tools.
 -- However, you can use another modifier like Mod1, but it may interact with others.
-modkey = "Mod4"
+local modkey = "Mod4"
 -- }}}
+
+local autostart = {
+	wifi = "nm-applet",
+	bluetooth = "blueman-applet",
+	volumicon = "volumeicon",
+	dropbpx = "dropbox start",
+	wallpaper = wallpaper,
+}
+
+for _, v in pairs(autostart) do
+	awful.util.spawn_with_shell("pgrep -u $USER -x " .. v .. " > /dev/null || (" .. v .. " &)")
+	-- awful.util.spawn_with_shell(v .. " &")
+end
 
 -- {{{ Menu
 -- Create a launcher widget and a main menu
-myawesomemenu = {
+local myawesomemenu = {
 	{
 		"hotkeys",
 		function()
@@ -69,16 +91,22 @@ myawesomemenu = {
 			awesome.quit()
 		end,
 	},
+	{
+		"shutdown",
+		function()
+			awful.util.spawn("sudo shutdown now")
+		end,
+	},
 }
 
-mymainmenu = awful.menu({
+local mymainmenu = awful.menu({
 	items = {
 		{ "awesome", myawesomemenu, beautiful.awesome_icon },
 		{ "open terminal", terminal },
 	},
 })
 
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon, menu = mymainmenu })
+local mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon, menu = mymainmenu })
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -88,19 +116,19 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- Table of layouts to cover with awful.layout.inc, order matters.
 tag.connect_signal("request::default_layouts", function()
 	awful.layout.append_default_layouts({
+		awful.layout.suit.max,
 		awful.layout.suit.floating,
 		awful.layout.suit.tile,
-		awful.layout.suit.tile.left,
-		awful.layout.suit.tile.bottom,
-		awful.layout.suit.tile.top,
-		awful.layout.suit.fair,
-		awful.layout.suit.fair.horizontal,
-		awful.layout.suit.spiral,
-		awful.layout.suit.spiral.dwindle,
-		awful.layout.suit.max,
-		awful.layout.suit.max.fullscreen,
-		awful.layout.suit.magnifier,
-		awful.layout.suit.corner.nw,
+		-- awful.layout.suit.tile.left,
+		-- awful.layout.suit.tile.bottom,
+		-- awful.layout.suit.tile.top,
+		-- awful.layout.suit.fair,
+		-- awful.layout.suit.fair.horizontal,
+		-- awful.layout.suit.spiral,
+		-- awful.layout.suit.spiral.dwindle,
+		-- awful.layout.suit.max.fullscreen,
+		-- awful.layout.suit.magnifier,
+		-- awful.layout.suit.corner.nw,
 	})
 end)
 -- }}}
@@ -128,10 +156,13 @@ end)
 -- {{{ Wibar
 
 -- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
+-- mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock()
+local mytextclock = wibox.widget.textclock()
+
+-- adjusting icon spacing in systray
+beautiful.systray_icon_spacing = 5
 
 screen.connect_signal("request::desktop_decoration", function(s)
 	-- Each screen has its own tag table.
@@ -188,10 +219,10 @@ screen.connect_signal("request::desktop_decoration", function(s)
 		},
 	})
 
-	-- Create a tasklist widget
 	s.mytasklist = awful.widget.tasklist({
 		screen = s,
 		filter = awful.widget.tasklist.filter.currenttags,
+		-- buttons = tasklist_buttons,
 		buttons = {
 			awful.button({}, 1, function(c)
 				c:activate({ context = "tasklist", action = "toggle_minimization" })
@@ -205,6 +236,56 @@ screen.connect_signal("request::desktop_decoration", function(s)
 			awful.button({}, 5, function()
 				awful.client.focus.byidx(1)
 			end),
+		},
+		style = {
+			shape_border_width = 1,
+			-- shape = gears.shape.rounded_rect,
+			shape = gears.shape.rounded_bar,
+		},
+		layout = {
+			spacing = 10,
+			spacing_widget = {
+				{
+					forced_width = 5,
+					shape = " ",
+					widget = wibox.widget.separator,
+				},
+				-- valign = "center",
+				-- halign = "center",
+				widget = wibox.container.place,
+			},
+			forced_width = 10,
+			layout = wibox.layout.fixed.horizontal,
+		},
+		widget_template = {
+			{
+				{
+					{
+						{
+							{
+								id = "icon_role",
+								widget = wibox.widget.imagebox,
+							},
+							margins = 2,
+							widget = wibox.container.margin,
+						},
+						{
+							id = "text_role",
+							widget = wibox.widget.textbox,
+						},
+						layout = wibox.layout.fixed.horizontal,
+						-- layout = wibox.layout.fixed.horizontal,
+					},
+					forced_width = 100, -- fixed width
+					widget = wibox.container.constraint,
+				},
+				left = 10,
+				right = 10,
+				widget = wibox.container.margin,
+				halign = "center",
+			},
+			id = "background_role",
+			widget = wibox.container.background,
 		},
 	})
 
@@ -223,7 +304,7 @@ screen.connect_signal("request::desktop_decoration", function(s)
 			s.mytasklist, -- Middle widget
 			{ -- Right widgets
 				layout = wibox.layout.fixed.horizontal,
-				mykeyboardlayout,
+				-- mykeyboardlayout,
 				wibox.widget.systray(),
 				mytextclock,
 				s.mylayoutbox,
@@ -277,7 +358,9 @@ awful.keyboard.append_global_keybindings({
 		awful.spawn(terminal)
 	end, { description = "open a terminal", group = "launcher" }),
 	awful.key({ modkey }, "r", function()
-		awful.screen.focused().mypromptbox:run()
+		-- awful.screen.focused().mypromptbox:run()
+		-- Rofi launcher
+		awful.util.spawn(rofi)
 	end, { description = "run prompt", group = "launcher" }),
 	awful.key({ modkey }, "p", function()
 		menubar.show()
@@ -540,6 +623,7 @@ end)
 -- }}}
 
 -- {{{ Rules
+-- To discover the class of the client uses "xprop" and click on the window
 -- Rules to apply to new clients.
 ruled.client.connect_signal("request::rules", function()
 	-- All clients will match this rule.
@@ -596,6 +680,17 @@ ruled.client.connect_signal("request::rules", function()
 	--     rule       = { class = "Firefox"     },
 	--     properties = { screen = 1, tag = "2" }
 	-- }
+
+	ruled.client.append_rule({
+		rule = { class = "kitty" },
+		properties = { screen = 1, tag = "1" },
+	})
+
+	-- Set Google Chrome to always map on tag named "2" on screen 1
+	ruled.client.append_rule({
+		rule = { class = "Google-chrome" },
+		properties = { screen = 1, tag = "2" },
+	})
 end)
 -- }}}
 
