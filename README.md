@@ -86,6 +86,34 @@ After build and instalation it's necessary to define ~/.xinitrc
 $ echo "exec awesome" >> ~/.xinitrc
 ```
 
+## OTHER SOFTWARES
+
+### Rofi
+
+Install `rofi` from the the package manager from your distro
+
+```
+$ sudo apt install -y rofi
+```
+
+After that, copy the themes from github repository
+`https://github.com/adi1090x/rofi` following the installation instructions.
+
+```
+$ git clone --depth=1 https://github.com/adi1090x/rofi.git
+$ cd rofi
+$ chmod +x setup.sh
+$ ./setup.sh
+```
+
+Add this lines into your `~/.bashrc`. These lines are necessary to use the
+`Mod4 + r` shortcut from the configuration in my repository.
+
+```
+# Edit .bashrc and add this line
+export PATH=$HOME/.config/rofi/scripts:$PATH
+```
+
 Now you can run `$ startx` from a `tty` to start using AwesomeWM.
 
 ## CONFIGURATION
