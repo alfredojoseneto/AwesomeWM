@@ -3,6 +3,8 @@
 -- found (e.g. lgi). If LuaRocks is not installed, do nothing.
 pcall(require, "luarocks.loader")
 
+require("config")
+
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
@@ -21,18 +23,6 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
 
--- {{{ Error handling
--- Check if awesome encountered an error during startup and fell back to
--- another config (This code will only ever execute for the fallback config)
-naughty.connect_signal("request::display_error", function(message, startup)
-	naughty.notification({
-		urgency = "critical",
-		title = "Oops, an error happened" .. (startup and " during startup!" or "!"),
-		message = message,
-	})
-end)
--- }}}
-
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 local user_home = os.getenv("HOME")
@@ -40,8 +30,6 @@ local xdg_config_home = user_home .. "/.config/awesome/"
 local user_theme = "default"
 -- beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
 beautiful.init(xdg_config_home .. "themes/" .. user_theme .. "/theme.lua")
-
-local wallpaper = "feh --bg-fill ~/.config/awesome/themes/wallpapers/debian.png"
 
 -- This is used later as the default terminal and editor to run.
 -- terminal = "terminator"
@@ -59,19 +47,6 @@ local rofi = user_home .. "/.config/rofi/launchers/type-2/launcher.sh"
 -- However, you can use another modifier like Mod1, but it may interact with others.
 local modkey = "Mod4"
 -- }}}
-
-local autostart = {
-	wifi = "nm-applet",
-	bluetooth = "blueman-applet",
-	volumicon = "volumeicon",
-	dropbpx = "dropbox start",
-	wallpaper = wallpaper,
-}
-
-for _, v in pairs(autostart) do
-	awful.util.spawn_with_shell("pgrep -u $USER -x " .. v .. " > /dev/null || (" .. v .. " &)")
-	-- awful.util.spawn_with_shell(v .. " &")
-end
 
 -- {{{ Menu
 -- Create a launcher widget and a main menu
@@ -123,32 +98,12 @@ tag.connect_signal("request::default_layouts", function()
 		-- awful.layout.suit.tile.bottom,
 		-- awful.layout.suit.tile.top,
 		-- awful.layout.suit.fair,
+		-- awful.layout.suit.magnifier,
 		-- awful.layout.suit.fair.horizontal,
 		-- awful.layout.suit.spiral,
 		-- awful.layout.suit.spiral.dwindle,
 		-- awful.layout.suit.max.fullscreen,
-		-- awful.layout.suit.magnifier,
 		-- awful.layout.suit.corner.nw,
-	})
-end)
--- }}}
-
--- {{{ Wallpaper
-screen.connect_signal("request::wallpaper", function(s)
-	awful.wallpaper({
-		screen = s,
-		widget = {
-			{
-				image = beautiful.wallpaper,
-				upscale = true,
-				downscale = true,
-				widget = wibox.widget.imagebox,
-			},
-			valign = "center",
-			halign = "center",
-			tiled = false,
-			widget = wibox.container.tile,
-		},
 	})
 end)
 -- }}}
@@ -653,6 +608,8 @@ ruled.client.connect_signal("request::rules", function()
 				"Wpa_gui",
 				"veromix",
 				"xtightvncviewer",
+				"Galculator",
+				"Pavucontrol",
 			},
 			-- Note that the name property shown in xprop might be set slightly after creation of the client
 			-- and the name shown there might not match defined rules here.
